@@ -1,0 +1,235 @@
+version: "3.8"
+
+networks:
+  my_network:
+
+services:
+  # General
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672" # RabbitMQ server port
+      - "15672:15672" # RabbitMQ management UI port
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - my_network
+
+  # MySQL server
+  mysqlserver:
+    image: mysql:latest
+    container_name: mysql_container
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - my_network
+
+  # MongoDB
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb_container
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - my_network
+
+  # Supplier
+  supplier:
+    image: suppliermanagement_app:0.5
+    build:
+      context: .
+      dockerfile: ./SupplierDockerfile
+    ports:
+      - "5300:5300"
+      - "8080:8080"
+    depends_on:
+      - rabbitmq
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - RABBITMQ_HOSTNAME=rabbitmq
+      - ASPNETCORE_URLS=http://+:5300
+    volumes:
+      - dotnet_supplier_data:/app
+    networks:
+      - my_network
+  # Product
+  product:
+    image: productmanagement_app_asp:0.4
+    build:
+      context: .
+      dockerfile: ./ProductDockerfile
+    ports:
+      - "5301:5301"
+      - "8082:8080"
+    depends_on:
+      - rabbitmq
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - RABBITMQ_HOSTNAME=rabbitmq
+      - ASPNETCORE_URLS=http://+:5301
+    volumes:
+      - dotnet_product_data:/app
+    networks:
+      - my_network
+
+  # User
+  user:
+    image: usermanagement_app:0.3
+    build:
+      context: .
+      dockerfile: ./UserDockerfile
+    ports:
+      - "5302:5302"
+      - "8083:8080"
+    depends_on:
+      - rabbitmq
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - RABBITMQ_HOSTNAME=rabbitmq
+      - ASPNETCORE_URLS=http://+:5302
+    volumes:
+      - dotnet_user_data:/app
+    networks:
+      - my_network
+
+  # Support
+  support:
+    image: supportmanagement_app:0.3
+    build:
+      context: .
+      dockerfile: ./SupportDockerfile
+    ports:
+      - "5303:5303"
+      - "8084:8080"
+    depends_on:
+      - rabbitmq
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - RABBITMQ_HOSTNAME=rabbitmq
+      - ASPNETCORE_URLS=http://+:5303
+    volumes:
+      - dotnet_support_data:/app
+    networks:
+      - my_network
+
+  # Order
+  order:
+    image: ordermanagement_app:0.3
+    build:
+      context: .
+      dockerfile: ./OrderDockerfile
+    ports:
+      - "5304:5304"
+      - "8085:8080"
+    depends_on:
+      - rabbitmq
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - RABBITMQ_HOSTNAME=rabbitmq
+      - ASPNETCORE_URLS=http://+:5304
+    volumes:
+      - dotnet_order_data:/app
+    networks:
+      - my_network
+
+  # Tracking
+  tracking:
+    image: trackingmanagement_app:0.3
+    build:
+      context: .
+      dockerfile: ./TrackingDockerfile
+    ports:
+      - "5308:5308"
+      - "8089:8080"
+    depends_on:
+      - rabbitmq
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - RABBITMQ_HOSTNAME=rabbitmq
+      - ASPNETCORE_URLS=http://+:5308
+    volumes:
+      - dotnet_tracking_data:/app
+    networks:
+      - my_network
+
+  # Payment
+  payment:
+    image: paymentmanagement_app:0.3
+    build:
+      context: .
+      dockerfile: ./PaymentDockerfile
+    ports:
+      - "5305:5305"
+      - "8086:8080"
+    depends_on:
+      - rabbitmq
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - RABBITMQ_HOSTNAME=rabbitmq
+      - ASPNETCORE_URLS=http://+:5305
+    volumes:
+      - dotnet_payment_data:/app
+    networks:
+      - my_network
+
+  # Invoice
+  invoice:
+    image: invoicemanagement_app:0.3
+    build:
+      context: .
+      dockerfile: ./InvoiceDockerfile
+    ports:
+      - "5306:5306"
+      - "8087:8080"
+    depends_on:
+      - rabbitmq
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - RABBITMQ_HOSTNAME=rabbitmq
+      - ASPNETCORE_URLS=http://+:5306
+    volumes:
+      - dotnet_invoice_data:/app
+    networks:
+      - my_network
+
+  # Notification
+  notification:
+    image: notificationmanagement_app:0.3
+    build:
+      context: .
+      dockerfile: ./NotificationDockerfile
+    ports:
+      - "5307:5307"
+      - "8088:8080"
+    depends_on:
+      - rabbitmq
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - RABBITMQ_HOSTNAME=rabbitmq
+      - ASPNETCORE_URLS=http://+:5307
+    volumes:
+      - dotnet_notification_data:/app
+    networks:
+      - my_network
+
+volumes:
+  rabbitmq_data:
+  mysql_data:
+  mongo_data:
+  dotnet_supplier_data:
+  dotnet_product_data:
+  dotnet_user_data:
+  dotnet_payment_data:
+  dotnet_invoice_data:
+  dotnet_notification_data:
+  dotnet_support_data:
+  dotnet_order_data:
+  dotnet_tracking_data:
